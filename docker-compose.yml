@@ -1,0 +1,31 @@
+version: "2"
+services:
+  web:
+    build: .
+    environment:
+      - MYENV=EXAMPLE
+      - SECRET_KEY=django-insecure-g*slgixjdka^=0k+pbvw%f_i-#jn905x44$$hesuy7bl$$+1yivo
+    volumes:
+      - .:/src/
+  web_migrate:
+    extends:
+      service: web
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; python manage.py migrate'
+    depends_on:
+      - "db"
+  web_run:
+    extends:
+      service: web
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; python manage.py runserver 0.0.0.0:8000'
+    ports:
+      - "8000:8000"
+    depends_on:
+      - "db"
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=post-db
+    ports:
+      - "5433:5432"
